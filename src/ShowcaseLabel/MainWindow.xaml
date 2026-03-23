@@ -22,10 +22,12 @@
         </Grid.ColumnDefinitions>
 
         <TextBlock Grid.Row="0" Grid.Column="0" Text="Carver ID:" VerticalAlignment="Center" Margin="0,0,10,10"/>
-        <TextBox x:Name="CarverIdTextBox" Grid.Row="0" Grid.Column="1" Margin="0,0,0,10" Padding="5"/>
+        <TextBox x:Name="CarverIdTextBox" Grid.Row="0" Grid.Column="1" Margin="0,0,0,10" Padding="5"
+                 PreviewTextInput="NumericOnly_PreviewTextInput" DataObject.Pasting="NumericOnly_Pasting"/>
 
         <TextBlock Grid.Row="1" Grid.Column="0" Text="Total Entries:" VerticalAlignment="Center" Margin="0,0,10,10"/>
-        <TextBox x:Name="TotalEntriesTextBox" Grid.Row="1" Grid.Column="1" Margin="0,0,0,10" Padding="5" Text="1"/>
+        <TextBox x:Name="TotalEntriesTextBox" Grid.Row="1" Grid.Column="1" Margin="0,0,0,10" Padding="5" Text="1"
+                 PreviewTextInput="NumericOnly_PreviewTextInput" DataObject.Pasting="NumericOnly_Pasting"/>
 
         <TextBlock Grid.Row="2" Grid.Column="0" Text="Printer:" VerticalAlignment="Center" Margin="0,0,10,10"/>
         <ComboBox x:Name="PrinterComboBox" Grid.Row="2" Grid.Column="1" Margin="0,0,0,10" Padding="5"/>

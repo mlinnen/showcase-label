@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
+using System.Windows.Input;
 using Microsoft.Extensions.Configuration;
 
 namespace ShowcaseLabel
@@ -114,12 +115,30 @@ namespace ShowcaseLabel
             }
         }
 
+        private void NumericOnly_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            e.Handled = !e.Text.All(char.IsDigit);
+        }
+
+        private void NumericOnly_Pasting(object sender, DataObjectPastingEventArgs e)
+        {
+            if (e.DataObject.GetDataPresent(typeof(string)))
+            {
+                string text = (string)e.DataObject.GetData(typeof(string))!;
+                if (!text.All(char.IsDigit))
+                    e.CancelCommand();
+            }
+            else
+            {
+                e.CancelCommand();
+            }
+        }
+
         private void PrintButton_Click(object sender, RoutedEventArgs e)
         {
-            string carverId = CarverIdTextBox.Text.Trim();
-            if (string.IsNullOrEmpty(carverId))
+            if (!int.TryParse(CarverIdTextBox.Text.Trim(), out int carverId) || carverId <= 0)
             {
-                MessageBox.Show("Please enter a Carver ID.", "Input Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Please enter a Carver ID greater than 0.", "Input Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
             if (!int.TryParse(TotalEntriesTextBox.Text, out int totalEntries) || totalEntries <= 0)
@@ -135,7 +154,7 @@ namespace ShowcaseLabel
             string printerName = PrinterComboBox.SelectedItem?.ToString() ?? "";
             LabelSize labelSize = SelectedLabelSize;
             StatusTextBlock.Text = $"Printing {totalEntries} labels to {printerName}...";
-            PrintLabels(printerName, carverId, totalEntries, labelSize);
+            PrintLabels(printerName, carverId.ToString(), totalEntries, labelSize);
         }
 
         private void PrintLabels(string printerName, string carverId, int totalEntries, LabelSize labelSize)
