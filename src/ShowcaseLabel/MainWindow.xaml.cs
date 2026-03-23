@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing.Printing;
-using System.IO.Ports;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -92,9 +90,6 @@ namespace ShowcaseLabel
         {
             try
             {
-                foreach (string printer in PrinterSettings.InstalledPrinters)
-                    PrinterComboBox.Items.Add(printer);
-
                 using var portsKey = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(
                     @"SYSTEM\CurrentControlSet\Control\Print\Monitors\USB Monitor\UsbPortList");
                 if (portsKey != null)
@@ -110,25 +105,8 @@ namespace ShowcaseLabel
                     }
                 }
 
-                foreach (string port in SerialPort.GetPortNames().OrderBy(p => p))
-                    PrinterComboBox.Items.Add(port);
-
                 if (PrinterComboBox.Items.Count > 0)
-                {
-                    foreach (var item in PrinterComboBox.Items)
-                    {
-                        string name = item?.ToString() ?? "";
-                        if (name.Contains("QR-112", StringComparison.OrdinalIgnoreCase) ||
-                            name.Contains("Label",  StringComparison.OrdinalIgnoreCase) ||
-                            name.StartsWith("USB",  StringComparison.OrdinalIgnoreCase))
-                        {
-                            PrinterComboBox.SelectedItem = item;
-                            break;
-                        }
-                    }
-                    if (PrinterComboBox.SelectedIndex == -1)
-                        PrinterComboBox.SelectedIndex = 0;
-                }
+                    PrinterComboBox.SelectedIndex = 0;
             }
             catch (Exception ex)
             {
@@ -169,25 +147,6 @@ namespace ShowcaseLabel
                     if (!_usbDevicePaths.TryGetValue(printerName, out string? devicePath))
                         throw new InvalidOperationException($"No device path found for {printerName}.");
                     PrintToUsb(devicePath, carverId, totalEntries, labelSize);
-                }
-                else if (printerName.StartsWith("COM", StringComparison.OrdinalIgnoreCase))
-                {
-                    using var port = new SerialPort(printerName, 9600);
-                    port.Open();
-                    for (int i = 1; i <= totalEntries; i++)
-                    {
-                        byte[] data = BuildTsplLabel($"{carverId}-{i}", labelSize);
-                        port.Write(data, 0, data.Length);
-                    }
-                }
-                else
-                {
-                    using var stream = System.IO.File.OpenWrite($@"\\localhost\{printerName}");
-                    for (int i = 1; i <= totalEntries; i++)
-                    {
-                        byte[] data = BuildTsplLabel($"{carverId}-{i}", labelSize);
-                        stream.Write(data, 0, data.Length);
-                    }
                 }
                 StatusTextBlock.Text = "Printing complete.";
                 StatusTextBlock.Foreground = System.Windows.Media.Brushes.Green;
