@@ -214,7 +214,7 @@ namespace ShowcaseLabel
             sb.AppendLine("DIRECTION 0");
             sb.AppendLine("CLS");
             sb.AppendLine($"QRCODE {qrX},{qrY},H,{size.QrCellWidth},A,0,M2,S7,\"{qrData}\"");
-            sb.AppendLine($"TEXT {textX},{textY},\"3\",0,{xMul},{yMul},\"{labelId}\"");
+            sb.AppendLine($"TEXT {textX},{textY},\"3\",0,{xMul},{yMul},\"C{labelId}\"");
             sb.AppendLine("PRINT 1,1");
 
             return Encoding.ASCII.GetBytes(sb.ToString());
