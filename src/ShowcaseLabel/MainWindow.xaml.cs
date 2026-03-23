@@ -38,12 +38,19 @@ namespace ShowcaseLabel
 
         private const int DPI = 203;
 
-        // Supported label sizes (width × height in dots at 203 DPI)
-        private record LabelSize(string DisplayName, int Width, int Height, int QrCellWidth);
+        // Supported label sizes.
+        // WidthMm/HeightMm/GapMm are physical dimensions used in TSPL SIZE/GAP commands
+        // so the gap sensor can re-home between labels and prevent vertical drift.
+        // Width/Height in dots are used for element positioning.
+        private record LabelSize(
+            string DisplayName,
+            double WidthMm, double HeightMm, double GapMm,
+            int Width, int Height, int QrCellWidth);
+
         private static readonly LabelSize[] LabelSizes =
         [
-            new("4 x 6 inch",       4 * DPI,       6 * DPI,       8),
-            new("2 5/8 x 1 inch",   (int)(2.625 * DPI), 1 * DPI,  3),
+            new("4 x 6 inch",     101.6,  152.4, 3.0,  4 * DPI,          6 * DPI,     8),
+            new("2 5/8 x 1 inch",  66.7,   25.4, 3.0,  (int)(2.625*DPI), 1 * DPI,     3),
         ];
 
         public MainWindow()
@@ -241,8 +248,10 @@ namespace ShowcaseLabel
             int textY = Math.Max(0, (size.Height - charH) / 2);
 
             var sb = new StringBuilder();
-            sb.AppendLine($"SIZE {size.Width} dot,{size.Height} dot");
-            sb.AppendLine("GAP 0,0");
+            // Use physical mm dimensions so the gap sensor re-homes between labels,
+            // preventing vertical drift across multiple prints.
+            sb.AppendLine($"SIZE {size.WidthMm} mm,{size.HeightMm} mm");
+            sb.AppendLine($"GAP {size.GapMm} mm,0");
             sb.AppendLine("DIRECTION 0");
             sb.AppendLine("CLS");
             sb.AppendLine($"QRCODE {qrX},{qrY},H,{size.QrCellWidth},A,0,M2,S7,\"{qrData}\"");
