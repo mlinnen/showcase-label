@@ -82,7 +82,7 @@ namespace ShowcaseLabel
         {
             foreach (var size in LabelSizes)
                 LabelSizeComboBox.Items.Add(size.DisplayName);
-            LabelSizeComboBox.SelectedIndex = 0;
+            LabelSizeComboBox.SelectedIndex = 1; // default to 2 5/8 x 1 inch
         }
 
         private LabelSize SelectedLabelSize =>
