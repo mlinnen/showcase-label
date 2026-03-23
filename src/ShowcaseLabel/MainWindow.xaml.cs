@@ -36,15 +36,22 @@ namespace ShowcaseLabel
         private const uint FILE_FLAG_WRITE_THROUGH = 0x80000000;
         private static readonly IntPtr INVALID_HANDLE_VALUE = new(-1);
 
-        private const int DPI         = 203;
-        private const int LabelWidth  = 4 * DPI;
-        private const int LabelHeight = 6 * DPI;
+        private const int DPI = 203;
+
+        // Supported label sizes (width × height in dots at 203 DPI)
+        private record LabelSize(string DisplayName, int Width, int Height, int QrCellWidth);
+        private static readonly LabelSize[] LabelSizes =
+        [
+            new("4 x 6 inch",       4 * DPI,       6 * DPI,       8),
+            new("2 5/8 x 1 inch",   (int)(2.625 * DPI), 1 * DPI,  3),
+        ];
 
         public MainWindow()
         {
             InitializeComponent();
             _baseUrl = LoadConfiguration();
             LoadPrinters();
+            LoadLabelSizes();
         }
 
         private string LoadConfiguration()
@@ -63,6 +70,16 @@ namespace ShowcaseLabel
                 return "";
             }
         }
+
+        private void LoadLabelSizes()
+        {
+            foreach (var size in LabelSizes)
+                LabelSizeComboBox.Items.Add(size.DisplayName);
+            LabelSizeComboBox.SelectedIndex = 0;
+        }
+
+        private LabelSize SelectedLabelSize =>
+            LabelSizes[LabelSizeComboBox.SelectedIndex >= 0 ? LabelSizeComboBox.SelectedIndex : 0];
 
         private void LoadPrinters()
         {
@@ -131,11 +148,12 @@ namespace ShowcaseLabel
                 return;
             }
             string printerName = PrinterComboBox.SelectedItem?.ToString() ?? "";
+            LabelSize labelSize = SelectedLabelSize;
             StatusTextBlock.Text = $"Printing {totalEntries} labels to {printerName}...";
-            PrintLabels(printerName, carverId, totalEntries);
+            PrintLabels(printerName, carverId, totalEntries, labelSize);
         }
 
-        private void PrintLabels(string printerName, string carverId, int totalEntries)
+        private void PrintLabels(string printerName, string carverId, int totalEntries, LabelSize labelSize)
         {
             try
             {
@@ -143,7 +161,7 @@ namespace ShowcaseLabel
                 {
                     if (!_usbDevicePaths.TryGetValue(printerName, out string? devicePath))
                         throw new InvalidOperationException($"No device path found for {printerName}.");
-                    PrintToUsb(devicePath, carverId, totalEntries);
+                    PrintToUsb(devicePath, carverId, totalEntries, labelSize);
                 }
                 else if (printerName.StartsWith("COM", StringComparison.OrdinalIgnoreCase))
                 {
@@ -151,7 +169,7 @@ namespace ShowcaseLabel
                     port.Open();
                     for (int i = 1; i <= totalEntries; i++)
                     {
-                        byte[] data = BuildTsplLabel($"{carverId}-{i}");
+                        byte[] data = BuildTsplLabel($"{carverId}-{i}", labelSize);
                         port.Write(data, 0, data.Length);
                     }
                 }
@@ -160,7 +178,7 @@ namespace ShowcaseLabel
                     using var stream = System.IO.File.OpenWrite($@"\\localhost\{printerName}");
                     for (int i = 1; i <= totalEntries; i++)
                     {
-                        byte[] data = BuildTsplLabel($"{carverId}-{i}");
+                        byte[] data = BuildTsplLabel($"{carverId}-{i}", labelSize);
                         stream.Write(data, 0, data.Length);
                     }
                 }
@@ -175,7 +193,7 @@ namespace ShowcaseLabel
             }
         }
 
-        private void PrintToUsb(string devicePath, string carverId, int totalEntries)
+        private void PrintToUsb(string devicePath, string carverId, int totalEntries, LabelSize labelSize)
         {
             IntPtr handle = CreateFile(devicePath, GENERIC_WRITE,
                 FILE_SHARE_READ | FILE_SHARE_WRITE, IntPtr.Zero,
@@ -188,7 +206,7 @@ namespace ShowcaseLabel
             {
                 for (int i = 1; i <= totalEntries; i++)
                 {
-                    byte[] data = BuildTsplLabel($"{carverId}-{i}");
+                    byte[] data = BuildTsplLabel($"{carverId}-{i}", labelSize);
                     if (!WriteFile(handle, data, (uint)data.Length, out _, IntPtr.Zero))
                         throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error(),
                             "Failed to write to USB printer device.");
@@ -200,22 +218,35 @@ namespace ShowcaseLabel
             }
         }
 
-        // Builds TSPL commands for a 4x6 label (203 DPI) with a centered QR code and label ID text.
-        private byte[] BuildTsplLabel(string labelId)
+        // Builds TSPL commands for a label with the QR code and label ID text side by side.
+        // The QR code is on the left; the label ID text is vertically centered to its right.
+        private byte[] BuildTsplLabel(string labelId, LabelSize size)
         {
             string qrData = $"{_baseUrl}{labelId}";
-            int qrX = LabelWidth / 2 - 100;
-            int qrY = 200;
-            int textX = LabelWidth / 2;
-            int textY = qrY + 450;
+
+            // Estimated QR code size in dots (modules × cellWidth; typical QR v3 = 29 modules)
+            int qrSize   = 29 * size.QrCellWidth;
+            int margin   = Math.Max(5, (size.Height - qrSize) / 2);
+            int qrX      = margin;
+            int qrY      = margin;
+
+            // Place text to the right of the QR code, vertically centered
+            // TSPL font "3": 16×24 dots/char at 1×1; scale up as space allows
+            int textAreaWidth = size.Width - qrSize - margin * 3;
+            int xMul = textAreaWidth > 200 ? 2 : 1;
+            int yMul = size.Height > 100   ? 2 : 1;
+            int charW = 16 * xMul;
+            int charH = 24 * yMul;
+            int textX = qrX + qrSize + margin;
+            int textY = Math.Max(0, (size.Height - charH) / 2);
 
             var sb = new StringBuilder();
-            sb.AppendLine($"SIZE {LabelWidth} dot,{LabelHeight} dot");
+            sb.AppendLine($"SIZE {size.Width} dot,{size.Height} dot");
             sb.AppendLine("GAP 0,0");
             sb.AppendLine("DIRECTION 0");
             sb.AppendLine("CLS");
-            sb.AppendLine($"QRCODE {qrX},{qrY},H,8,A,0,M2,S7,\"{qrData}\"");
-            sb.AppendLine($"TEXT {textX},{textY},\"4\",0,2,2,\"{labelId}\"");
+            sb.AppendLine($"QRCODE {qrX},{qrY},H,{size.QrCellWidth},A,0,M2,S7,\"{qrData}\"");
+            sb.AppendLine($"TEXT {textX},{textY},\"3\",0,{xMul},{yMul},\"{labelId}\"");
             sb.AppendLine("PRINT 1,1");
 
             return Encoding.ASCII.GetBytes(sb.ToString());
