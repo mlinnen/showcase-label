@@ -1,0 +1,17 @@
+# .gitignore for Showcase Label (C# WPF)
+
+# Build results
+[Bb]in/
+[Oo]bj/
+[Qq]uick[Cc]heck/
+
+# IDE files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# OS files
+.DS_Store
+Thumbs.db
