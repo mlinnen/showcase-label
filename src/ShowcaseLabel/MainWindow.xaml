@@ -5,9 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ShowcaseLabel"
         mc:Ignorable="d"
-        Title="Showcase Label Printer" Height="350" Width="450" WindowStartupLocation="CenterScreen">
+        Title="Showcase Label Printer" Height="380" Width="450" WindowStartupLocation="CenterScreen">
     <Grid Margin="20">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -21,17 +22,22 @@
         </Grid.ColumnDefinitions>
 
         <TextBlock Grid.Row="0" Grid.Column="0" Text="Carver ID:" VerticalAlignment="Center" Margin="0,0,10,10"/>
-        <TextBox x:Name="CarverIdTextBox" Grid.Row="0" Grid.Column="1" Margin="0,0,0,10" Padding="5"/>
+        <TextBox x:Name="CarverIdTextBox" Grid.Row="0" Grid.Column="1" Margin="0,0,0,10" Padding="5"
+                 PreviewTextInput="NumericOnly_PreviewTextInput" DataObject.Pasting="NumericOnly_Pasting"/>
 
         <TextBlock Grid.Row="1" Grid.Column="0" Text="Total Entries:" VerticalAlignment="Center" Margin="0,0,10,10"/>
-        <TextBox x:Name="TotalEntriesTextBox" Grid.Row="1" Grid.Column="1" Margin="0,0,0,10" Padding="5" Text="1"/>
+        <TextBox x:Name="TotalEntriesTextBox" Grid.Row="1" Grid.Column="1" Margin="0,0,0,10" Padding="5" Text="1"
+                 PreviewTextInput="NumericOnly_PreviewTextInput" DataObject.Pasting="NumericOnly_Pasting"/>
 
         <TextBlock Grid.Row="2" Grid.Column="0" Text="Printer:" VerticalAlignment="Center" Margin="0,0,10,10"/>
         <ComboBox x:Name="PrinterComboBox" Grid.Row="2" Grid.Column="1" Margin="0,0,0,10" Padding="5"/>
 
-        <Button x:Name="PrintButton" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Content="Print Labels" 
+        <TextBlock Grid.Row="3" Grid.Column="0" Text="Label Size:" VerticalAlignment="Center" Margin="0,0,10,10"/>
+        <ComboBox x:Name="LabelSizeComboBox" Grid.Row="3" Grid.Column="1" Margin="0,0,0,10" Padding="5"/>
+
+        <Button x:Name="PrintButton" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Content="Print Labels" 
                 Click="PrintButton_Click" Padding="10" Margin="0,10,0,10" Background="#007ACC" Foreground="White" FontWeight="Bold"/>
 
-        <TextBlock x:Name="StatusTextBlock" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Text="Ready" Foreground="Gray" Margin="0,10,0,0"/>
+        <TextBlock x:Name="StatusTextBlock" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Text="Ready" Foreground="Gray" Margin="0,10,0,0"/>
     </Grid>
 </Window>
