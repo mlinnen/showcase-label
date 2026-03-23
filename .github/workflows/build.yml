@@ -7,6 +7,9 @@ on:
     branches: [ master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -36,8 +39,38 @@ jobs:
         -p:IncludeNativeLibrariesForSelfExtract=true
         -o ./publish/${{ matrix.runtime }}
 
+    - name: Zip Artifacts
+      shell: pwsh
+      run: |
+        Compress-Archive -Path "./publish/${{ matrix.runtime }}/*" -DestinationPath "./ShowcaseLabel-${{ matrix.runtime }}.zip"
+
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
         name: ShowcaseLabel-${{ matrix.runtime }}
-        path: ./publish/${{ matrix.runtime }}
+        path: ./ShowcaseLabel-${{ matrix.runtime }}.zip
+
+  release:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+        pattern: ShowcaseLabel-*
+        merge-multiple: true
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v1.0.${{ github.run_number }}
+        name: Release v1.0.${{ github.run_number }}
+        files: artifacts/*.zip
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
