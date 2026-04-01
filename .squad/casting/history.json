@@ -1,0 +1,21 @@
+{
+  "universe_usage_history": [
+    {
+      "universe": "Reservoir Dogs",
+      "first_used": "2026-04-01",
+      "assignment_id": "showcase-label-2026-04-01"
+    }
+  ],
+  "assignment_cast_snapshots": {
+    "showcase-label-2026-04-01": {
+      "project": "showcase-label",
+      "universe": "Reservoir Dogs",
+      "cast_date": "2026-04-01",
+      "agents": [
+        { "folder": "mr-pink", "name": "Mr. Pink", "role": "Lead" },
+        { "folder": "mr-blonde", "name": "Mr. Blonde", "role": ".NET Dev" },
+        { "folder": "mr-orange", "name": "Mr. Orange", "role": "Tester" }
+      ]
+    }
+  }
+}
