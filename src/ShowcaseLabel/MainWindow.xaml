@@ -26,18 +26,18 @@
         <TextBox x:Name="CarverIdTextBox" Grid.Row="0" Grid.Column="1" Margin="0,0,0,10" Padding="5"
                  PreviewTextInput="NumericOnly_PreviewTextInput" DataObject.Pasting="NumericOnly_Pasting"/>
 
-        <TextBlock Grid.Row="1" Grid.Column="0" Text="Total Entries:" VerticalAlignment="Center" Margin="0,0,10,10"/>
-        <TextBox x:Name="TotalEntriesTextBox" Grid.Row="1" Grid.Column="1" Margin="0,0,0,10" Padding="5" Text="1"
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Division:" VerticalAlignment="Center" Margin="0,0,10,10"/>
+        <ComboBox x:Name="DivisionComboBox" Grid.Row="1" Grid.Column="1" Margin="0,0,0,10" Padding="5"/>
+
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="Total Entries:" VerticalAlignment="Center" Margin="0,0,10,10"/>
+        <TextBox x:Name="TotalEntriesTextBox" Grid.Row="2" Grid.Column="1" Margin="0,0,0,10" Padding="5" Text="1"
                  PreviewTextInput="NumericOnly_PreviewTextInput" DataObject.Pasting="NumericOnly_Pasting"/>
 
-        <TextBlock Grid.Row="2" Grid.Column="0" Text="Printer:" VerticalAlignment="Center" Margin="0,0,10,10"/>
-        <ComboBox x:Name="PrinterComboBox" Grid.Row="2" Grid.Column="1" Margin="0,0,0,10" Padding="5"/>
+        <TextBlock Grid.Row="3" Grid.Column="0" Text="Printer:" VerticalAlignment="Center" Margin="0,0,10,10"/>
+        <ComboBox x:Name="PrinterComboBox" Grid.Row="3" Grid.Column="1" Margin="0,0,0,10" Padding="5"/>
 
-        <TextBlock Grid.Row="3" Grid.Column="0" Text="Label Size:" VerticalAlignment="Center" Margin="0,0,10,10"/>
-        <ComboBox x:Name="LabelSizeComboBox" Grid.Row="3" Grid.Column="1" Margin="0,0,0,10" Padding="5"/>
-
-        <TextBlock Grid.Row="4" Grid.Column="0" Text="Division:" VerticalAlignment="Center" Margin="0,0,10,10"/>
-        <ComboBox x:Name="DivisionComboBox" Grid.Row="4" Grid.Column="1" Margin="0,0,0,10" Padding="5"/>
+        <TextBlock Grid.Row="4" Grid.Column="0" Text="Label Size:" VerticalAlignment="Center" Margin="0,0,10,10"/>
+        <ComboBox x:Name="LabelSizeComboBox" Grid.Row="4" Grid.Column="1" Margin="0,0,0,10" Padding="5"/>
 
         <Button x:Name="PrintButton" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Content="Print Labels" 
                 Click="PrintButton_Click" Padding="10" Margin="0,10,0,10" Background="#007ACC" Foreground="White" FontWeight="Bold"/>
