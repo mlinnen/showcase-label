@@ -34,3 +34,12 @@
 - QR code URL deliberately excludes the prefix — it tracks by raw carver/entry ID only.
 - Window height bumped from 380 → 420 to accommodate the extra row without clipping.
 - Pre-existing NuGet vulnerability warnings on `SixLabors.ImageSharp` 2.1.3 are not related to this work.
+
+### 2026-04-01 — Issue #17: QR code URL changed to query parameters
+
+- `appsettings.json` `BaseUrl` changed from `https://charlottewoodcarvers.com/showcase/2026/` to `https://charlottewoodcarvers.com/showcase/`; year is no longer baked into the URL.
+- New `"Event": "2026"` key added to `appsettings.json`; value can be updated each year without touching code.
+- `LoadConfiguration()` now returns a `(string baseUrl, string evt)` tuple so both values are loaded and stored as `_baseUrl` and `_event` fields.
+- `BuildTsplLabel` signature changed from `string labelId` to `string carverId, int entryNumber`; QR URL is now `{_baseUrl}?event={event}&carverId={carverId}&entry={entryNumber}` (values URL-escaped via `Uri.EscapeDataString`).
+- The TSPL `TEXT` command (human-readable label) is unchanged: `{divisionPrefix}C{carverId}-{entryNumber}`.
+- `PrintToUsb` loop updated to call `BuildTsplLabel(carverId, i, labelSize, divisionPrefix)` with separate arguments.

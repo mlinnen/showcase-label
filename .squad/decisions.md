@@ -70,8 +70,45 @@ Establish `ShowcaseLabel.Tests` as the single xUnit test project for the solutio
 - Any new `internal` helpers that need testing should follow the same `InternalsVisibleTo` pattern already in place.
 - `dotnet test` from the solution root will pick up all tests automatically.
 
+# Decision: QR Code URL Uses Query Parameters (Issue #17)
+
+**Date:** 2026-04-01  
+**Author:** Mr. Blonde  
+**Issue:** #17
+
+## Summary
+
+The QR code URL format has been changed from a path-based URL to a query-parameter-based URL, and the event year has been extracted into a dedicated configuration key.
+
+## Changes
+
+### `appsettings.json`
+- `BaseUrl` changed from `https://charlottewoodcarvers.com/showcase/2026/` to `https://charlottewoodcarvers.com/showcase/`  
+  — The year is no longer embedded in the base URL.
+- New key `"Event": "2026"` added.  
+  — To change the event year, update only this value; no code changes required.
+
+### QR URL Format
+- **Before:** `https://charlottewoodcarvers.com/showcase/2026/123-1`
+- **After:** `https://charlottewoodcarvers.com/showcase/?event=2026&carverId=123&entry=1`
+
+Query parameters use `Uri.EscapeDataString` for safe encoding of all dynamic values.
+
+### Label Text (unchanged)
+The human-readable TSPL `TEXT` command remains: `{divisionPrefix}C{carverId}-{entryNumber}` (e.g. `N-C123-1`). Only the QR URL changed.
+
+## Rationale
+
+- Query parameters make each component (event, carver ID, entry number) independently addressable and parseable by the backend without string splitting.
+- Decoupling the event year from `BaseUrl` means the URL root is stable across years; only the `Event` config value needs updating annually.
+- URL-encoding each parameter prevents injection issues if IDs ever contain special characters.
+
+
+---
+
 ## Governance
 
 - All meaningful changes require team consensus
 - Document architectural decisions here
 - Keep history focused on work, decisions focused on direction
+

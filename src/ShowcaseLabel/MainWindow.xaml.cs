@@ -12,6 +12,7 @@ namespace ShowcaseLabel
     public partial class MainWindow : Window
     {
         private readonly string _baseUrl;
+        private readonly string _event;
         private readonly Dictionary<string, string> _usbDevicePaths = new();
 
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
@@ -55,13 +56,13 @@ namespace ShowcaseLabel
         public MainWindow()
         {
             InitializeComponent();
-            _baseUrl = LoadConfiguration();
+            (_baseUrl, _event) = LoadConfiguration();
             LoadPrinters();
             LoadLabelSizes();
             LoadDivisions();
         }
 
-        private string LoadConfiguration()
+        private (string baseUrl, string evt) LoadConfiguration()
         {
             try
             {
@@ -69,12 +70,12 @@ namespace ShowcaseLabel
                     .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
                     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                     .Build();
-                return config["BaseUrl"] ?? "";
+                return (config["BaseUrl"] ?? "", config["Event"] ?? "");
             }
             catch (Exception ex)
             {
                 StatusTextBlock.Text = $"Error loading config: {ex.Message}";
-                return "";
+                return ("", "");
             }
         }
 
@@ -210,7 +211,7 @@ namespace ShowcaseLabel
             {
                 for (int i = 1; i <= totalEntries; i++)
                 {
-                    byte[] data = BuildTsplLabel($"{carverId}-{i}", labelSize, divisionPrefix);
+                    byte[] data = BuildTsplLabel(carverId, i, labelSize, divisionPrefix);
                     if (!WriteFile(handle, data, (uint)data.Length, out _, IntPtr.Zero))
                         throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error(),
                             "Failed to write to USB printer device.");
@@ -224,9 +225,9 @@ namespace ShowcaseLabel
 
         // Builds TSPL commands for a label with the QR code and label ID text side by side.
         // The QR code is on the left; the label ID text is vertically centered to its right.
-        private byte[] BuildTsplLabel(string labelId, LabelSize size, string divisionPrefix)
+        private byte[] BuildTsplLabel(string carverId, int entryNumber, LabelSize size, string divisionPrefix)
         {
-            string qrData = $"{_baseUrl}{labelId}";
+            string qrData = $"{_baseUrl}?event={Uri.EscapeDataString(_event)}&carverId={Uri.EscapeDataString(carverId)}&entry={entryNumber}";
 
             // Estimated QR code size in dots (modules × cellWidth; typical QR v3 = 29 modules)
             int qrSize   = 29 * size.QrCellWidth;
@@ -252,7 +253,7 @@ namespace ShowcaseLabel
             sb.AppendLine("DIRECTION 0");
             sb.AppendLine("CLS");
             sb.AppendLine($"QRCODE {qrX},{qrY},H,{size.QrCellWidth},A,0,M2,S7,\"{qrData}\"");
-            sb.AppendLine($"TEXT {textX},{textY},\"3\",0,{xMul},{yMul},\"{divisionPrefix}C{labelId}\"");
+            sb.AppendLine($"TEXT {textX},{textY},\"3\",0,{xMul},{yMul},\"{divisionPrefix}C{carverId}-{entryNumber}\"");
             sb.AppendLine("PRINT 1,1");
 
             return Encoding.ASCII.GetBytes(sb.ToString());
