@@ -252,7 +252,7 @@ namespace ShowcaseLabel
             sb.AppendLine($"GAP {size.GapMm} mm,0");
             sb.AppendLine("DIRECTION 0");
             sb.AppendLine("CLS");
-            sb.AppendLine($"QRCODE {qrX},{qrY},H,{size.QrCellWidth},A,0,M2,S7,\"{qrData}\"");
+            sb.AppendLine($"QRCODE {qrX},{qrY},M,{size.QrCellWidth},A,0,M2,S7,\"{qrData}\"");
             sb.AppendLine($"TEXT {textX},{textY},\"3\",0,{xMul},{yMul},\"{divisionPrefix}C{carverId}-{entryNumber}\"");
             sb.AppendLine("PRINT 1,1");
 
