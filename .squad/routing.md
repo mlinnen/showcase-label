@@ -6,12 +6,11 @@ How to decide who handles what.
 
 | Work Type | Route To | Examples |
 |-----------|----------|----------|
-| {domain 1} | {Name} | {example tasks} |
-| {domain 2} | {Name} | {example tasks} |
-| {domain 3} | {Name} | {example tasks} |
-| Code review | {Name} | Review PRs, check quality, suggest improvements |
-| Testing | {Name} | Write tests, find edge cases, verify fixes |
-| Scope & priorities | {Name} | What to build next, trade-offs, decisions |
+| C# / WPF / Win32 implementation | Mr. Blonde | Feature code, printer integration, TSPL commands, XAML changes, NuGet deps |
+| Architecture & refactoring | Mr. Pink | MVVM extraction, service layer design, code review, CI/CD changes |
+| Testing & testability | Mr. Orange | xUnit tests, test project setup, coverage analysis, extraction proposals |
+| Code review | Mr. Pink | PR reviews, quality gates, approvals |
+| Scope & priorities | Mr. Pink | What to build next, trade-offs, architecture decisions |
 | Async issue work (bugs, tests, small features) | @copilot 🤖 | Well-defined tasks matching capability profile |
 | Session logging | Scribe | Automatic — never needs routing |
 

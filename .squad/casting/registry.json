@@ -1,0 +1,41 @@
+{
+  "agents": {
+    "scribe": {
+      "persistent_name": "Scribe",
+      "universe": null,
+      "created_at": "2026-03-23",
+      "legacy_named": true,
+      "status": "active",
+      "notes": "Always Scribe — exempt from casting"
+    },
+    "ralph": {
+      "persistent_name": "Ralph",
+      "universe": null,
+      "created_at": "2026-03-23",
+      "legacy_named": true,
+      "status": "active",
+      "notes": "Always Ralph — exempt from casting"
+    },
+    "mr-pink": {
+      "persistent_name": "Mr. Pink",
+      "universe": "Reservoir Dogs",
+      "created_at": "2026-04-01",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "mr-blonde": {
+      "persistent_name": "Mr. Blonde",
+      "universe": "Reservoir Dogs",
+      "created_at": "2026-04-01",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "mr-orange": {
+      "persistent_name": "Mr. Orange",
+      "universe": "Reservoir Dogs",
+      "created_at": "2026-04-01",
+      "legacy_named": false,
+      "status": "active"
+    }
+  }
+}
