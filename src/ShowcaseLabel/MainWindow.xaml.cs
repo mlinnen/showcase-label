@@ -12,7 +12,6 @@ namespace ShowcaseLabel
     public partial class MainWindow : Window
     {
         private readonly string _baseUrl;
-        private readonly string _event;
         private readonly Dictionary<string, string> _usbDevicePaths = new();
 
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
@@ -56,13 +55,14 @@ namespace ShowcaseLabel
         public MainWindow()
         {
             InitializeComponent();
-            (_baseUrl, _event) = LoadConfiguration();
+            _baseUrl = LoadConfiguration();
+            LoadEvents();
             LoadPrinters();
             LoadLabelSizes();
             LoadDivisions();
         }
 
-        private (string baseUrl, string evt) LoadConfiguration()
+        private string LoadConfiguration()
         {
             try
             {
@@ -70,13 +70,20 @@ namespace ShowcaseLabel
                     .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
                     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                     .Build();
-                return (config["BaseUrl"] ?? "", config["Event"] ?? "");
+                return config["BaseUrl"] ?? "";
             }
             catch (Exception ex)
             {
                 StatusTextBlock.Text = $"Error loading config: {ex.Message}";
-                return ("", "");
+                return "";
             }
+        }
+
+        private void LoadEvents()
+        {
+            EventComboBox.Items.Add("2026");
+            EventComboBox.Items.Add("2026T");
+            EventComboBox.SelectedItem = "2026";
         }
 
         private void LoadLabelSizes()
@@ -155,7 +162,7 @@ namespace ShowcaseLabel
 
         private void PrintButton_Click(object sender, RoutedEventArgs e)
         {
-            if (!int.TryParse(CarverIdTextBox.Text.Trim(), out int carverId) || carverId <= 0)
+            if (!int.TryParse(CarverIdTextBox.Text.Trim(), out int carver_id) || carver_id <= 0)
             {
                 MessageBox.Show("Please enter a Carver ID greater than 0.", "Input Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
@@ -174,10 +181,10 @@ namespace ShowcaseLabel
             string divisionPrefix = GetDivisionPrefix(DivisionComboBox.SelectedItem?.ToString() ?? "None");
             LabelSize labelSize = SelectedLabelSize;
             StatusTextBlock.Text = $"Printing {totalEntries} labels to {printerName}...";
-            PrintLabels(printerName, carverId.ToString(), totalEntries, labelSize, divisionPrefix);
+            PrintLabels(printerName, carver_id.ToString(), totalEntries, labelSize, divisionPrefix);
         }
 
-        private void PrintLabels(string printerName, string carverId, int totalEntries, LabelSize labelSize, string divisionPrefix)
+        private void PrintLabels(string printerName, string carver_id, int totalEntries, LabelSize labelSize, string divisionPrefix)
         {
             try
             {
@@ -185,7 +192,7 @@ namespace ShowcaseLabel
                 {
                     if (!_usbDevicePaths.TryGetValue(printerName, out string? devicePath))
                         throw new InvalidOperationException($"No device path found for {printerName}.");
-                    PrintToUsb(devicePath, carverId, totalEntries, labelSize, divisionPrefix);
+                    PrintToUsb(devicePath, carver_id, totalEntries, labelSize, divisionPrefix);
                 }
                 StatusTextBlock.Text = "Printing complete.";
                 StatusTextBlock.Foreground = System.Windows.Media.Brushes.Green;
@@ -198,7 +205,7 @@ namespace ShowcaseLabel
             }
         }
 
-        private void PrintToUsb(string devicePath, string carverId, int totalEntries, LabelSize labelSize, string divisionPrefix)
+        private void PrintToUsb(string devicePath, string carver_id, int totalEntries, LabelSize labelSize, string divisionPrefix)
         {
             IntPtr handle = CreateFile(devicePath, GENERIC_WRITE,
                 FILE_SHARE_READ | FILE_SHARE_WRITE, IntPtr.Zero,
@@ -211,7 +218,7 @@ namespace ShowcaseLabel
             {
                 for (int i = 1; i <= totalEntries; i++)
                 {
-                    byte[] data = BuildTsplLabel(carverId, i, labelSize, divisionPrefix);
+                    byte[] data = BuildTsplLabel(carver_id, i, labelSize, divisionPrefix);
                     if (!WriteFile(handle, data, (uint)data.Length, out _, IntPtr.Zero))
                         throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error(),
                             "Failed to write to USB printer device.");
@@ -225,9 +232,9 @@ namespace ShowcaseLabel
 
         // Builds TSPL commands for a label with the QR code and label ID text side by side.
         // The QR code is on the left; the label ID text is vertically centered to its right.
-        private byte[] BuildTsplLabel(string carverId, int entryNumber, LabelSize size, string divisionPrefix)
+        private byte[] BuildTsplLabel(string carver_id, int entryNumber, LabelSize size, string divisionPrefix)
         {
-            string qrData = $"{_baseUrl}?event={Uri.EscapeDataString(_event)}&carverId={Uri.EscapeDataString(carverId)}&entry={entryNumber}";
+            string qrData = $"{_baseUrl}?event={Uri.EscapeDataString(EventComboBox.SelectedItem?.ToString() ?? "")}&carver_id={Uri.EscapeDataString(carver_id)}&entry={entryNumber}";
 
             // Estimated QR code size in dots (modules × cellWidth; typical QR v3 = 29 modules)
             int qrSize   = 29 * size.QrCellWidth;
@@ -253,7 +260,7 @@ namespace ShowcaseLabel
             sb.AppendLine("DIRECTION 0");
             sb.AppendLine("CLS");
             sb.AppendLine($"QRCODE {qrX},{qrY},M,{size.QrCellWidth},A,0,M2,S7,\"{qrData}\"");
-            sb.AppendLine($"TEXT {textX},{textY},\"3\",0,{xMul},{yMul},\"{divisionPrefix}C{carverId}-{entryNumber}\"");
+            sb.AppendLine($"TEXT {textX},{textY},\"3\",0,{xMul},{yMul},\"{divisionPrefix}C{carver_id}-{entryNumber}\"");
             sb.AppendLine("PRINT 1,1");
 
             return Encoding.ASCII.GetBytes(sb.ToString());
