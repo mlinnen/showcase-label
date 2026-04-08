@@ -41,11 +41,11 @@ public class DivisionPrefixTests
     [InlineData("Novice",       99, 5, "N-C99-5")]
     [InlineData("None",          1, 1, "C1-1")]
     public void FormatLabelText_DivisionAndCarverAndEntry_ProducesCorrectString(
-        string division, int carverId, int entry, string expected)
+        string division, int carver_id, int entry, string expected)
     {
-        // This mirrors the logic: {prefix}C{carverId}-{entry}
+        // This mirrors the logic: {prefix}C{carver_id}-{entry}
         string prefix = MainWindow.GetDivisionPrefix(division);
-        string labelText = $"{prefix}C{carverId}-{entry}";
+        string labelText = $"{prefix}C{carver_id}-{entry}";
         Assert.Equal(expected, labelText);
     }
 }

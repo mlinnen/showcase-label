@@ -40,6 +40,6 @@
 - `appsettings.json` `BaseUrl` changed from `https://charlottewoodcarvers.com/showcase/2026/` to `https://charlottewoodcarvers.com/showcase/`; year is no longer baked into the URL.
 - New `"Event": "2026"` key added to `appsettings.json`; value can be updated each year without touching code.
 - `LoadConfiguration()` now returns a `(string baseUrl, string evt)` tuple so both values are loaded and stored as `_baseUrl` and `_event` fields.
-- `BuildTsplLabel` signature changed from `string labelId` to `string carverId, int entryNumber`; QR URL is now `{_baseUrl}?event={event}&carverId={carverId}&entry={entryNumber}` (values URL-escaped via `Uri.EscapeDataString`).
-- The TSPL `TEXT` command (human-readable label) is unchanged: `{divisionPrefix}C{carverId}-{entryNumber}`.
-- `PrintToUsb` loop updated to call `BuildTsplLabel(carverId, i, labelSize, divisionPrefix)` with separate arguments.
+- `BuildTsplLabel` signature changed from `string labelId` to `string carver_id, int entryNumber`; QR URL is now `{_baseUrl}?event={event}&carver_id={carver_id}&entry={entryNumber}` (values URL-escaped via `Uri.EscapeDataString`).
+- The TSPL `TEXT` command (human-readable label) is unchanged: `{divisionPrefix}C{carver_id}-{entryNumber}`.
+- `PrintToUsb` loop updated to call `BuildTsplLabel(carver_id, i, labelSize, divisionPrefix)` with separate arguments.
