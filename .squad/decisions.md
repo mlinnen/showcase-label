@@ -8,7 +8,7 @@
 **Author:** Mr. Blonde  
 **Issue:** #15
 
-The division prefix (N-, I-, O-, or empty) is applied **only to the human-readable label text** printed via the TSPL `TEXT` command. The QR code URL remains unchanged and continues to encode the raw `{carverId}-{entry}` identifier.
+The division prefix (N-, I-, O-, or empty) is applied **only to the human-readable label text** printed via the TSPL `TEXT` command. The QR code URL remains unchanged and continues to encode the raw `{carver_id}-{entry}` identifier.
 
 **Rationale:**
 - QR codes are scanned by the judging system to look up entries by ID. Embedding a division prefix in the URL would break existing lookups and require backend changes outside this scope.
@@ -90,12 +90,12 @@ The QR code URL format has been changed from a path-based URL to a query-paramet
 
 ### QR URL Format
 - **Before:** `https://charlottewoodcarvers.com/showcase/2026/123-1`
-- **After:** `https://charlottewoodcarvers.com/showcase/?event=2026&carverId=123&entry=1`
+- **After:** `https://charlottewoodcarvers.com/showcase/?event=2026&carver_id=123&entry=1`
 
 Query parameters use `Uri.EscapeDataString` for safe encoding of all dynamic values.
 
 ### Label Text (unchanged)
-The human-readable TSPL `TEXT` command remains: `{divisionPrefix}C{carverId}-{entryNumber}` (e.g. `N-C123-1`). Only the QR URL changed.
+The human-readable TSPL `TEXT` command remains: `{divisionPrefix}C{carver_id}-{entryNumber}` (e.g. `N-C123-1`). Only the QR URL changed.
 
 ## Rationale
 
