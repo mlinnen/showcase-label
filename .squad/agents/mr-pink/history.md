@@ -7,4 +7,6 @@
 
 ## Learnings
 
+- **GitHub renamed master → main**: The repository's default branch is now called `main`, but the `master` branch still exists locally and on origin. When pushing to `master`, GitHub accepts it but notes the rename. No action needed; the old `master` branch is kept for backward compatibility.
+
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
