@@ -1,0 +1,5 @@
+### 2026-09-06T12-54-53: Issue #32 removes Division from the label-printing contract
+**By:** Mr. Pink
+**What:** Issue #32 removes Division from the label-printing contract
+**References:** issue #32, issue #15, Mr. Blonde, .NET implementation, Mr. Orange, test/QA
+**Why:** For issue #32, Division is removed end-to-end rather than replaced with an empty/default value. The printing call chain will carry only printer, carver ID, inclusive entry bounds, and label size. The TSPL human-readable text invariant is `C{carverId}-{entryNumber}`; QR URL construction (event, carver_id, entry) and range semantics remain unchanged. Remove the Division UI/control initialization, prefix helper, propagation parameters, and Division-only tests. Add a focused testable label-text seam only if needed so the assertion exercises the production string used in `BuildTsplLabel`, not duplicated test-side interpolation. This supersedes the Division-specific portions of the #15 decision, without changing its QR invariants.
