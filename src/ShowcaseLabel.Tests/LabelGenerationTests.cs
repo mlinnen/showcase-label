@@ -12,13 +12,13 @@ public class LabelGenerationTests
         0,
         "SIZE 101.6 mm,152.4 mm",
         "QRCODE 493,493,M,8,A,0,M2,S7,\"https://charlottewoodcarvers.com/r?event=2027T&carver_id=123&entry=4\"",
-        "TEXT 1218,585,\"3\",0,1,2,\"N-C123-4\"")]
+        "TEXT 1218,585,\"3\",0,1,2,\"C123-4\"")]
     [InlineData(
         1,
         "SIZE 66.7 mm,25.4 mm",
         "QRCODE 58,58,M,3,A,0,M2,S7,\"https://charlottewoodcarvers.com/r?event=2027T&carver_id=123&entry=4\"",
-        "TEXT 203,77,\"3\",0,2,2,\"N-C123-4\"")]
-    public void BuildTsplLabel_PreservesQrDivisionAndSelectedLabelSize(
+        "TEXT 203,77,\"3\",0,2,2,\"C123-4\"")]
+    public void BuildTsplLabel_PreservesQrAndSelectedLabelSize(
         int labelSizeIndex,
         string expectedSize,
         string expectedQrCode,
@@ -35,7 +35,7 @@ public class LabelGenerationTests
                 .GetValue(window)!;
             byte[] bytes = (byte[])typeof(MainWindow)
                 .GetMethod("BuildTsplLabel", BindingFlags.Instance | BindingFlags.NonPublic)!
-                .Invoke(window, ["123", 4, labelSize, "N-"])!;
+                .Invoke(window, ["123", 4, labelSize])!;
 
             return Encoding.ASCII.GetString(bytes);
         });

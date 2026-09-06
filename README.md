@@ -6,7 +6,7 @@ A Windows WPF application for printing QR code labels on a **4BARCODE QR-112D** 
 
 For each entry in a carving showcase, the app prints a label containing:
 - A QR code (left side) that links to the entry's detail page
-- The label ID (right side, e.g. `C123-1`, `C123-2`, …, or with division prefix `N-C123-1` for Novice division)
+- The label ID (right side, e.g. `C123-1`, `C123-2`, …)
 
 Both elements are printed side-by-side on the same label.
 
@@ -57,14 +57,13 @@ Or open `showcase-label.sln` in Visual Studio and press **F5**.
 2. Choose a carver mode:
    - **Single carver** (the default): enter one numeric **Carver ID** (e.g. `123`).
    - **Carver range**: enter numeric **Start Carver ID** and **End Carver ID** values. Bounds are inclusive and Start must be less than or equal to End.
-3. Select a **Division** (None, Novice, Intermediate, or Open). The division prefix (if any) will appear on the label text.
-4. Enter the **From Entry** and **To Entry** numbers to define the inclusive entry range.
+3. Enter the **From Entry** and **To Entry** numbers to define the inclusive entry range.
    - Both values must be positive integers greater than 0.
    - From Entry must be less than or equal to To Entry.
    - For a single label, set both From Entry and To Entry to the same number.
-5. Select the **Label Size** matching the stock loaded in the printer (defaults to 2 5/8 x 1 inch).
-6. Select **USB001** from the printer dropdown (auto-selected on startup).
-7. Click **Print Labels** to print all labels in the specified range.
+4. Select the **Label Size** matching the stock loaded in the printer (defaults to 2 5/8 x 1 inch).
+5. Select **USB001** from the printer dropdown (auto-selected on startup).
+6. Click **Print Labels** to print all labels in the specified range.
 
 In carver-range mode, the batch is the Cartesian product of the inclusive carver and entry ranges. Labels are printed in ascending carver-ID order, with entries ascending within each carver. For example, carvers `10`–`12` with entries `1`–`5` print `C10-1` through `C10-5`, then `C11-1` through `C11-5`, and finally `C12-1` through `C12-5`.
 
@@ -80,20 +79,18 @@ Only USB ports are shown — COM ports and Windows spooler printers are excluded
 
 Labels are generated as raw TSPL commands at 203 DPI. Physical mm dimensions are used in `SIZE` and `GAP` so the printer's gap sensor re-homes between each label (preventing vertical drift across multiple prints).
 
-The label text includes an optional division prefix (N-, I-, O-, or empty) based on the selected division.
-
-**2 5/8 x 1 inch example (Novice division):**
+**2 5/8 x 1 inch example:**
 ```
 SIZE 66.7 mm,25.4 mm
 GAP 3 mm,0
 DIRECTION 0
 CLS
 QRCODE <x>,<y>,M,3,A,0,M2,S7,"<url>"
-TEXT <x>,<y>,"3",0,1,1,"N-C<carver_id>-<entry>"
+TEXT <x>,<y>,"3",0,1,1,"C<carver_id>-<entry>"
 PRINT 1,1
 ```
 
-**4 x 6 inch example (no division prefix):**
+**4 x 6 inch example:**
 ```
 SIZE 101.6 mm,152.4 mm
 GAP 3 mm,0
