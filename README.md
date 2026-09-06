@@ -6,7 +6,7 @@ A Windows WPF application for printing QR code labels on a **4BARCODE QR-112D** 
 
 For each entry in a carving showcase, the app prints a label containing:
 - A QR code (left side) that links to the entry's detail page
-- The label ID (right side, e.g. `ABC-1`, `ABC-2`, …)
+- The label ID (right side, e.g. `C123-1`, `C123-2`, …)
 
 Both elements are printed side-by-side on the same label.
 
@@ -31,11 +31,11 @@ Edit `src/ShowcaseLabel/appsettings.json` to set the base URL for QR codes:
 
 ```json
 {
-  "BaseUrl": "https://yoursite.com/carving/"
+  "BaseUrl": "https://yoursite.com/showcase/"
 }
 ```
 
-The QR code on each label will encode `{BaseUrl}{CarverId}-{N}` (e.g. `https://yoursite.com/carving/ABC-1`).
+The QR code on each label will encode the URL as a query string with the event, carver ID, and entry number (e.g. `https://yoursite.com/showcase/?event=2027&carver_id=123&entry=1`).
 
 ## Building
 
@@ -53,11 +53,19 @@ Or open `showcase-label.sln` in Visual Studio and press **F5**.
 
 ## Usage
 
-1. Enter the **Carver ID** (e.g. `ABC`).
-2. Enter the **Total Entries** (number of labels to print).
-3. Select the **Label Size** matching the stock loaded in the printer (defaults to 2 5/8 x 1 inch).
-4. Select **USB001** from the printer dropdown (auto-selected on startup).
-5. Click **Print Labels**.
+1. Select the **Event** from the dropdown (e.g. `2027` or `2027T`).
+2. Choose a carver mode:
+   - **Single carver** (the default): enter one numeric **Carver ID** (e.g. `123`).
+   - **Carver range**: enter numeric **Start Carver ID** and **End Carver ID** values. Bounds are inclusive and Start must be less than or equal to End.
+3. Enter the **From Entry** and **To Entry** numbers to define the inclusive entry range.
+   - Both values must be positive integers greater than 0.
+   - From Entry must be less than or equal to To Entry.
+   - For a single label, set both From Entry and To Entry to the same number.
+4. Select the **Label Size** matching the stock loaded in the printer (defaults to 2 5/8 x 1 inch).
+5. Select **USB001** from the printer dropdown (auto-selected on startup).
+6. Click **Print Labels** to print all labels in the specified range.
+
+In carver-range mode, the batch is the Cartesian product of the inclusive carver and entry ranges. Labels are printed in ascending carver-ID order, with entries ascending within each carver. For example, carvers `10`–`12` with entries `1`–`5` print `C10-1` through `C10-5`, then `C11-1` through `C11-5`, and finally `C12-1` through `C12-5`.
 
 ## How printer detection works
 
@@ -77,8 +85,8 @@ SIZE 66.7 mm,25.4 mm
 GAP 3 mm,0
 DIRECTION 0
 CLS
-QRCODE <x>,<y>,H,3,A,0,M2,S7,"<url>"
-TEXT <x>,<y>,"3",0,1,1,"<labelId>"
+QRCODE <x>,<y>,M,3,A,0,M2,S7,"<url>"
+TEXT <x>,<y>,"3",0,1,1,"C<carver_id>-<entry>"
 PRINT 1,1
 ```
 
@@ -88,7 +96,7 @@ SIZE 101.6 mm,152.4 mm
 GAP 3 mm,0
 DIRECTION 0
 CLS
-QRCODE <x>,<y>,H,8,A,0,M2,S7,"<url>"
-TEXT <x>,<y>,"3",0,2,2,"<labelId>"
+QRCODE <x>,<y>,M,8,A,0,M2,S7,"<url>"
+TEXT <x>,<y>,"3",0,2,2,"C<carver_id>-<entry>"
 PRINT 1,1
 ```
