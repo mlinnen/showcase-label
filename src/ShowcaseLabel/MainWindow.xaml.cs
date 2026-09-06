@@ -81,9 +81,9 @@ namespace ShowcaseLabel
 
         private void LoadEvents()
         {
-            EventComboBox.Items.Add("2026");
-            EventComboBox.Items.Add("2026T");
-            EventComboBox.SelectedItem = "2026";
+            EventComboBox.Items.Add("2027");
+            EventComboBox.Items.Add("2027T");
+            EventComboBox.SelectedItem = "2027";
         }
 
         private void LoadLabelSizes()
