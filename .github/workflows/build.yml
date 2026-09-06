@@ -39,6 +39,25 @@ jobs:
         -p:IncludeNativeLibrariesForSelfExtract=true
         -o ./publish/${{ matrix.runtime }}
 
+    - name: Sign Executable
+      if: env.CODESIGN_PFX_BASE64 != ''
+      env:
+        CODESIGN_PFX_BASE64: ${{ secrets.CODESIGN_PFX_BASE64 }}
+        CODESIGN_PFX_PASSWORD: ${{ secrets.CODESIGN_PFX_PASSWORD }}
+      shell: pwsh
+      run: |
+        $pfxPath = Join-Path $env:RUNNER_TEMP "codesign.pfx"
+        [System.Convert]::FromBase64String($env:CODESIGN_PFX_BASE64) | Set-Content $pfxPath -AsByteStream
+        
+        $signtool = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin" -Recurse -Filter "signtool.exe" |
+          Where-Object { $_.FullName -match "x64" } |
+          Sort-Object LastWriteTime -Descending |
+          Select-Object -First 1 -ExpandProperty FullName
+        
+        & $signtool sign /fd sha256 /td sha256 /tr http://timestamp.digicert.com /f $pfxPath /p $env:CODESIGN_PFX_PASSWORD "./publish/${{ matrix.runtime }}/ShowcaseLabel.exe"
+        
+        Remove-Item $pfxPath -Force
+
     - name: Zip Artifacts
       shell: pwsh
       run: |

@@ -81,9 +81,9 @@ namespace ShowcaseLabel
 
         private void LoadEvents()
         {
-            EventComboBox.Items.Add("2026");
-            EventComboBox.Items.Add("2026T");
-            EventComboBox.SelectedItem = "2026";
+            EventComboBox.Items.Add("2027");
+            EventComboBox.Items.Add("2027T");
+            EventComboBox.SelectedItem = "2027";
         }
 
         private void LoadLabelSizes()
@@ -160,6 +160,45 @@ namespace ShowcaseLabel
             }
         }
 
+        // Validates the From/To entry range before any printer I/O is attempted.
+        // Both bounds must be positive integers; bounds are inclusive, and a reversed
+        // range (from > to) is rejected rather than auto-swapped.
+        internal static bool TryValidateEntryRange(
+            string? fromEntryText, string? toEntryText,
+            out int fromEntry, out int toEntry, out string errorMessage)
+        {
+            fromEntry = 0;
+            toEntry = 0;
+            errorMessage = "";
+
+            if (!int.TryParse(fromEntryText?.Trim(), out fromEntry) || fromEntry <= 0)
+            {
+                errorMessage = "Please enter a valid From Entry greater than 0.";
+                return false;
+            }
+
+            if (!int.TryParse(toEntryText?.Trim(), out toEntry) || toEntry <= 0)
+            {
+                errorMessage = "Please enter a valid To Entry greater than 0.";
+                return false;
+            }
+
+            if (fromEntry > toEntry)
+            {
+                errorMessage = "From Entry must be less than or equal to To Entry.";
+                return false;
+            }
+
+            return true;
+        }
+
+        // Produces the inclusive sequence of entry numbers to print, from fromEntry to toEntry.
+        internal static IEnumerable<int> GetEntrySequence(int fromEntry, int toEntry)
+        {
+            for (int i = fromEntry; i <= toEntry; i++)
+                yield return i;
+        }
+
         private void PrintButton_Click(object sender, RoutedEventArgs e)
         {
             if (!int.TryParse(CarverIdTextBox.Text.Trim(), out int carver_id) || carver_id <= 0)
@@ -167,9 +206,9 @@ namespace ShowcaseLabel
                 MessageBox.Show("Please enter a Carver ID greater than 0.", "Input Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
-            if (!int.TryParse(TotalEntriesTextBox.Text, out int totalEntries) || totalEntries <= 0)
+            if (!TryValidateEntryRange(FromEntryTextBox.Text, ToEntryTextBox.Text, out int fromEntry, out int toEntry, out string rangeError))
             {
-                MessageBox.Show("Please enter a valid number of entries.", "Input Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(rangeError, "Input Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
             if (PrinterComboBox.SelectedItem == null)
@@ -180,11 +219,12 @@ namespace ShowcaseLabel
             string printerName = PrinterComboBox.SelectedItem?.ToString() ?? "";
             string divisionPrefix = GetDivisionPrefix(DivisionComboBox.SelectedItem?.ToString() ?? "None");
             LabelSize labelSize = SelectedLabelSize;
-            StatusTextBlock.Text = $"Printing {totalEntries} labels to {printerName}...";
-            PrintLabels(printerName, carver_id.ToString(), totalEntries, labelSize, divisionPrefix);
+            int totalLabels = toEntry - fromEntry + 1;
+            StatusTextBlock.Text = $"Printing {totalLabels} label{(totalLabels == 1 ? "" : "s")} to {printerName}...";
+            PrintLabels(printerName, carver_id.ToString(), fromEntry, toEntry, labelSize, divisionPrefix);
         }
 
-        private void PrintLabels(string printerName, string carver_id, int totalEntries, LabelSize labelSize, string divisionPrefix)
+        private void PrintLabels(string printerName, string carver_id, int fromEntry, int toEntry, LabelSize labelSize, string divisionPrefix)
         {
             try
             {
@@ -192,7 +232,7 @@ namespace ShowcaseLabel
                 {
                     if (!_usbDevicePaths.TryGetValue(printerName, out string? devicePath))
                         throw new InvalidOperationException($"No device path found for {printerName}.");
-                    PrintToUsb(devicePath, carver_id, totalEntries, labelSize, divisionPrefix);
+                    PrintToUsb(devicePath, carver_id, fromEntry, toEntry, labelSize, divisionPrefix);
                 }
                 StatusTextBlock.Text = "Printing complete.";
                 StatusTextBlock.Foreground = System.Windows.Media.Brushes.Green;
@@ -205,7 +245,7 @@ namespace ShowcaseLabel
             }
         }
 
-        private void PrintToUsb(string devicePath, string carver_id, int totalEntries, LabelSize labelSize, string divisionPrefix)
+        private void PrintToUsb(string devicePath, string carver_id, int fromEntry, int toEntry, LabelSize labelSize, string divisionPrefix)
         {
             IntPtr handle = CreateFile(devicePath, GENERIC_WRITE,
                 FILE_SHARE_READ | FILE_SHARE_WRITE, IntPtr.Zero,
@@ -216,7 +256,7 @@ namespace ShowcaseLabel
                     "Failed to open USB printer device.");
             try
             {
-                for (int i = 1; i <= totalEntries; i++)
+                foreach (int i in GetEntrySequence(fromEntry, toEntry))
                 {
                     byte[] data = BuildTsplLabel(carver_id, i, labelSize, divisionPrefix);
                     if (!WriteFile(handle, data, (uint)data.Length, out _, IntPtr.Zero))
