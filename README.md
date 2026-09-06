@@ -35,7 +35,7 @@ Edit `src/ShowcaseLabel/appsettings.json` to set the base URL for QR codes:
 }
 ```
 
-The QR code on each label will encode the URL as a query string with the event, carver ID, and entry number (e.g. `https://yoursite.com/showcase/?event=2027&carver_id=ABC&entry=1`).
+The QR code on each label will encode the URL as a query string with the event, carver ID, and entry number (e.g. `https://yoursite.com/showcase/?event=2027&carver_id=123&entry=1`).
 
 ## Building
 
