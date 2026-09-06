@@ -59,7 +59,6 @@ namespace ShowcaseLabel
             LoadEvents();
             LoadPrinters();
             LoadLabelSizes();
-            LoadDivisions();
         }
 
         private string LoadConfiguration()
@@ -92,23 +91,6 @@ namespace ShowcaseLabel
                 LabelSizeComboBox.Items.Add(size.DisplayName);
             LabelSizeComboBox.SelectedIndex = 1; // default to 2 5/8 x 1 inch
         }
-
-        private void LoadDivisions()
-        {
-            DivisionComboBox.Items.Add("None");
-            DivisionComboBox.Items.Add("Novice");
-            DivisionComboBox.Items.Add("Intermediate");
-            DivisionComboBox.Items.Add("Open");
-            DivisionComboBox.SelectedIndex = 0; // default: None
-        }
-
-        internal static string GetDivisionPrefix(string division) => division switch
-        {
-            "Novice"       => "N-",
-            "Intermediate" => "I-",
-            "Open"         => "O-",
-            _              => ""
-        };
 
         private LabelSize SelectedLabelSize =>
             LabelSizes[LabelSizeComboBox.SelectedIndex >= 0 ? LabelSizeComboBox.SelectedIndex : 0];
@@ -217,14 +199,13 @@ namespace ShowcaseLabel
                 return;
             }
             string printerName = PrinterComboBox.SelectedItem?.ToString() ?? "";
-            string divisionPrefix = GetDivisionPrefix(DivisionComboBox.SelectedItem?.ToString() ?? "None");
             LabelSize labelSize = SelectedLabelSize;
             int totalLabels = toEntry - fromEntry + 1;
             StatusTextBlock.Text = $"Printing {totalLabels} label{(totalLabels == 1 ? "" : "s")} to {printerName}...";
-            PrintLabels(printerName, carver_id.ToString(), fromEntry, toEntry, labelSize, divisionPrefix);
+            PrintLabels(printerName, carver_id.ToString(), fromEntry, toEntry, labelSize);
         }
 
-        private void PrintLabels(string printerName, string carver_id, int fromEntry, int toEntry, LabelSize labelSize, string divisionPrefix)
+        private void PrintLabels(string printerName, string carver_id, int fromEntry, int toEntry, LabelSize labelSize)
         {
             try
             {
@@ -232,7 +213,7 @@ namespace ShowcaseLabel
                 {
                     if (!_usbDevicePaths.TryGetValue(printerName, out string? devicePath))
                         throw new InvalidOperationException($"No device path found for {printerName}.");
-                    PrintToUsb(devicePath, carver_id, fromEntry, toEntry, labelSize, divisionPrefix);
+                    PrintToUsb(devicePath, carver_id, fromEntry, toEntry, labelSize);
                 }
                 StatusTextBlock.Text = "Printing complete.";
                 StatusTextBlock.Foreground = System.Windows.Media.Brushes.Green;
@@ -245,7 +226,7 @@ namespace ShowcaseLabel
             }
         }
 
-        private void PrintToUsb(string devicePath, string carver_id, int fromEntry, int toEntry, LabelSize labelSize, string divisionPrefix)
+        private void PrintToUsb(string devicePath, string carver_id, int fromEntry, int toEntry, LabelSize labelSize)
         {
             IntPtr handle = CreateFile(devicePath, GENERIC_WRITE,
                 FILE_SHARE_READ | FILE_SHARE_WRITE, IntPtr.Zero,
@@ -258,7 +239,7 @@ namespace ShowcaseLabel
             {
                 foreach (int i in GetEntrySequence(fromEntry, toEntry))
                 {
-                    byte[] data = BuildTsplLabel(carver_id, i, labelSize, divisionPrefix);
+                    byte[] data = BuildTsplLabel(carver_id, i, labelSize);
                     if (!WriteFile(handle, data, (uint)data.Length, out _, IntPtr.Zero))
                         throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error(),
                             "Failed to write to USB printer device.");
@@ -272,7 +253,7 @@ namespace ShowcaseLabel
 
         // Builds TSPL commands for a label with the QR code and label ID text side by side.
         // The QR code is on the left; the label ID text is vertically centered to its right.
-        private byte[] BuildTsplLabel(string carver_id, int entryNumber, LabelSize size, string divisionPrefix)
+        private byte[] BuildTsplLabel(string carver_id, int entryNumber, LabelSize size)
         {
             string qrData = $"{_baseUrl}?event={Uri.EscapeDataString(EventComboBox.SelectedItem?.ToString() ?? "")}&carver_id={Uri.EscapeDataString(carver_id)}&entry={entryNumber}";
 
@@ -300,7 +281,7 @@ namespace ShowcaseLabel
             sb.AppendLine("DIRECTION 0");
             sb.AppendLine("CLS");
             sb.AppendLine($"QRCODE {qrX},{qrY},M,{size.QrCellWidth},A,0,M2,S7,\"{qrData}\"");
-            sb.AppendLine($"TEXT {textX},{textY},\"3\",0,{xMul},{yMul},\"{divisionPrefix}C{carver_id}-{entryNumber}\"");
+            sb.AppendLine($"TEXT {textX},{textY},\"3\",0,{xMul},{yMul},\"C{carver_id}-{entryNumber}\"");
             sb.AppendLine("PRINT 1,1");
 
             return Encoding.ASCII.GetBytes(sb.ToString());
