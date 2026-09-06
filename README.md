@@ -54,15 +54,20 @@ Or open `showcase-label.sln` in Visual Studio and press **F5**.
 ## Usage
 
 1. Select the **Event** from the dropdown (e.g. `2027` or `2027T`).
-2. Enter the **Carver ID** (numeric only, e.g. `123`).
+2. Choose a carver mode:
+   - **Single carver** (the default): enter one numeric **Carver ID** (e.g. `123`).
+   - **Carver range**: enter numeric **Start Carver ID** and **End Carver ID** values. Bounds are inclusive and Start must be less than or equal to End.
 3. Select a **Division** (None, Novice, Intermediate, or Open). The division prefix (if any) will appear on the label text.
-4. Enter the **From Entry** and **To Entry** numbers to define the inclusive range of labels to print.
+4. Enter the **From Entry** and **To Entry** numbers to define the inclusive entry range.
    - Both values must be positive integers greater than 0.
    - From Entry must be less than or equal to To Entry.
    - For a single label, set both From Entry and To Entry to the same number.
-5. Select the **Label Size** matching the stock loaded in the printer (defaults to 2 5/8 x 1 inch).
-6. Select **USB001** from the printer dropdown (auto-selected on startup).
-7. Click **Print Labels** to print all labels in the specified range.
+5. Set **Maximum labels** for the batch (defaults to `15`). A batch exceeding this limit is rejected before the printer is opened.
+6. Select the **Label Size** matching the stock loaded in the printer (defaults to 2 5/8 x 1 inch).
+7. Select **USB001** from the printer dropdown (auto-selected on startup).
+8. Click **Print Labels** to print all labels in the specified range.
+
+In carver-range mode, the batch is the Cartesian product of the inclusive carver and entry ranges. Labels are printed in ascending carver-ID order, with entries ascending within each carver. For example, carvers `10`–`12` with entries `1`–`5` print `C10-1` through `C10-5`, then `C11-1` through `C11-5`, and finally `C12-1` through `C12-5` (15 labels).
 
 ## How printer detection works
 

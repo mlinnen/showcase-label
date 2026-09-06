@@ -195,20 +195,128 @@ namespace ShowcaseLabel
         // Produces the inclusive sequence of entry numbers to print, from fromEntry to toEntry.
         internal static IEnumerable<int> GetEntrySequence(int fromEntry, int toEntry)
         {
-            for (int i = fromEntry; i <= toEntry; i++)
-                yield return i;
+            for (long entry = fromEntry; entry <= toEntry; entry++)
+                yield return (int)entry;
+        }
+
+        // Validates inclusive carver bounds using the same rules as the entry range.
+        internal static bool TryValidateCarverRange(
+            string? fromCarverText, string? toCarverText,
+            out int fromCarver, out int toCarver, out string errorMessage)
+        {
+            fromCarver = 0;
+            toCarver = 0;
+            errorMessage = "";
+
+            if (!int.TryParse(fromCarverText?.Trim(), out fromCarver) || fromCarver <= 0)
+            {
+                errorMessage = "Please enter a valid Start Carver ID greater than 0.";
+                return false;
+            }
+
+            if (!int.TryParse(toCarverText?.Trim(), out toCarver) || toCarver <= 0)
+            {
+                errorMessage = "Please enter a valid End Carver ID greater than 0.";
+                return false;
+            }
+
+            if (fromCarver > toCarver)
+            {
+                errorMessage = "Start Carver ID must be less than or equal to End Carver ID.";
+                return false;
+            }
+
+            return true;
+        }
+
+        // Produces inclusive carver IDs without overflowing at Int32.MaxValue.
+        internal static IEnumerable<int> GetCarverSequence(int fromCarver, int toCarver)
+        {
+            for (long carver = fromCarver; carver <= toCarver; carver++)
+                yield return (int)carver;
+        }
+
+        internal static bool TryValidateMaximumLabels(
+            string? maximumLabelsText, out long maximumLabels, out string errorMessage)
+        {
+            maximumLabels = 0;
+            errorMessage = "";
+
+            if (!long.TryParse(maximumLabelsText?.Trim(), out maximumLabels) || maximumLabels <= 0)
+            {
+                errorMessage = "Please enter a maximum label count greater than 0.";
+                return false;
+            }
+
+            return true;
+        }
+
+        internal static long GetBatchLabelCount(
+            int fromCarver, int toCarver, int fromEntry, int toEntry) =>
+            checked(((long)toCarver - fromCarver + 1) * ((long)toEntry - fromEntry + 1));
+
+        // Yields labels in deterministic carver-major, entry-ascending order.
+        internal static IEnumerable<(int CarverId, int EntryNumber)> GetBatchPrintJobs(
+            int fromCarver, int toCarver, int fromEntry, int toEntry)
+        {
+            foreach (int carverId in GetCarverSequence(fromCarver, toCarver))
+            {
+                foreach (int entryNumber in GetEntrySequence(fromEntry, toEntry))
+                    yield return (carverId, entryNumber);
+            }
+        }
+
+        private void CarverMode_Checked(object sender, RoutedEventArgs e)
+        {
+            if (SingleCarverPanel is null || RangeCarverPanel is null)
+                return;
+
+            bool isRangeMode = RangeCarverRadioButton.IsChecked == true;
+            SingleCarverPanel.Visibility = isRangeMode ? Visibility.Collapsed : Visibility.Visible;
+            RangeCarverPanel.Visibility = isRangeMode ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void PrintButton_Click(object sender, RoutedEventArgs e)
         {
-            if (!int.TryParse(CarverIdTextBox.Text.Trim(), out int carver_id) || carver_id <= 0)
+            int fromCarver;
+            int toCarver;
+            if (RangeCarverRadioButton.IsChecked == true)
+            {
+                if (!TryValidateCarverRange(
+                    FromCarverIdTextBox.Text, ToCarverIdTextBox.Text,
+                    out fromCarver, out toCarver, out string carverRangeError))
+                {
+                    MessageBox.Show(carverRangeError, "Input Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+            }
+            else if (!int.TryParse(CarverIdTextBox.Text.Trim(), out fromCarver) || fromCarver <= 0)
             {
                 MessageBox.Show("Please enter a Carver ID greater than 0.", "Input Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
+            else
+            {
+                toCarver = fromCarver;
+            }
+
             if (!TryValidateEntryRange(FromEntryTextBox.Text, ToEntryTextBox.Text, out int fromEntry, out int toEntry, out string rangeError))
             {
                 MessageBox.Show(rangeError, "Input Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            if (!TryValidateMaximumLabels(MaximumLabelsTextBox.Text, out long maximumLabels, out string maximumLabelsError))
+            {
+                MessageBox.Show(maximumLabelsError, "Input Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            long totalLabels = GetBatchLabelCount(fromCarver, toCarver, fromEntry, toEntry);
+            if (totalLabels > maximumLabels)
+            {
+                MessageBox.Show(
+                    $"This batch contains {totalLabels} labels, which exceeds the maximum of {maximumLabels}.",
+                    "Input Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
             if (PrinterComboBox.SelectedItem == null)
@@ -219,12 +327,22 @@ namespace ShowcaseLabel
             string printerName = PrinterComboBox.SelectedItem?.ToString() ?? "";
             string divisionPrefix = GetDivisionPrefix(DivisionComboBox.SelectedItem?.ToString() ?? "None");
             LabelSize labelSize = SelectedLabelSize;
-            int totalLabels = toEntry - fromEntry + 1;
             StatusTextBlock.Text = $"Printing {totalLabels} label{(totalLabels == 1 ? "" : "s")} to {printerName}...";
-            PrintLabels(printerName, carver_id.ToString(), fromEntry, toEntry, labelSize, divisionPrefix);
+            StatusTextBlock.Foreground = System.Windows.Media.Brushes.Gray;
+            PrintLabels(
+                printerName,
+                GetBatchPrintJobs(fromCarver, toCarver, fromEntry, toEntry),
+                totalLabels,
+                labelSize,
+                divisionPrefix);
         }
 
-        private void PrintLabels(string printerName, string carver_id, int fromEntry, int toEntry, LabelSize labelSize, string divisionPrefix)
+        private void PrintLabels(
+            string printerName,
+            IEnumerable<(int CarverId, int EntryNumber)> printJobs,
+            long totalLabels,
+            LabelSize labelSize,
+            string divisionPrefix)
         {
             try
             {
@@ -232,9 +350,9 @@ namespace ShowcaseLabel
                 {
                     if (!_usbDevicePaths.TryGetValue(printerName, out string? devicePath))
                         throw new InvalidOperationException($"No device path found for {printerName}.");
-                    PrintToUsb(devicePath, carver_id, fromEntry, toEntry, labelSize, divisionPrefix);
+                    PrintToUsb(devicePath, printJobs, labelSize, divisionPrefix);
                 }
-                StatusTextBlock.Text = "Printing complete.";
+                StatusTextBlock.Text = $"Printing complete: {totalLabels} label{(totalLabels == 1 ? "" : "s")}.";
                 StatusTextBlock.Foreground = System.Windows.Media.Brushes.Green;
             }
             catch (Exception ex)
@@ -245,7 +363,11 @@ namespace ShowcaseLabel
             }
         }
 
-        private void PrintToUsb(string devicePath, string carver_id, int fromEntry, int toEntry, LabelSize labelSize, string divisionPrefix)
+        private void PrintToUsb(
+            string devicePath,
+            IEnumerable<(int CarverId, int EntryNumber)> printJobs,
+            LabelSize labelSize,
+            string divisionPrefix)
         {
             IntPtr handle = CreateFile(devicePath, GENERIC_WRITE,
                 FILE_SHARE_READ | FILE_SHARE_WRITE, IntPtr.Zero,
@@ -256,9 +378,9 @@ namespace ShowcaseLabel
                     "Failed to open USB printer device.");
             try
             {
-                foreach (int i in GetEntrySequence(fromEntry, toEntry))
+                foreach ((int carverId, int entryNumber) in printJobs)
                 {
-                    byte[] data = BuildTsplLabel(carver_id, i, labelSize, divisionPrefix);
+                    byte[] data = BuildTsplLabel(carverId.ToString(), entryNumber, labelSize, divisionPrefix);
                     if (!WriteFile(handle, data, (uint)data.Length, out _, IntPtr.Zero))
                         throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error(),
                             "Failed to write to USB printer device.");
