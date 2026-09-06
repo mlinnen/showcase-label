@@ -236,21 +236,6 @@ namespace ShowcaseLabel
                 yield return (int)carver;
         }
 
-        internal static bool TryValidateMaximumLabels(
-            string? maximumLabelsText, out long maximumLabels, out string errorMessage)
-        {
-            maximumLabels = 0;
-            errorMessage = "";
-
-            if (!long.TryParse(maximumLabelsText?.Trim(), out maximumLabels) || maximumLabels <= 0)
-            {
-                errorMessage = "Please enter a maximum label count greater than 0.";
-                return false;
-            }
-
-            return true;
-        }
-
         internal static long GetBatchLabelCount(
             int fromCarver, int toCarver, int fromEntry, int toEntry) =>
             checked(((long)toCarver - fromCarver + 1) * ((long)toEntry - fromEntry + 1));
@@ -305,20 +290,8 @@ namespace ShowcaseLabel
                 MessageBox.Show(rangeError, "Input Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
-            if (!TryValidateMaximumLabels(MaximumLabelsTextBox.Text, out long maximumLabels, out string maximumLabelsError))
-            {
-                MessageBox.Show(maximumLabelsError, "Input Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
 
             long totalLabels = GetBatchLabelCount(fromCarver, toCarver, fromEntry, toEntry);
-            if (totalLabels > maximumLabels)
-            {
-                MessageBox.Show(
-                    $"This batch contains {totalLabels} labels, which exceeds the maximum of {maximumLabels}.",
-                    "Input Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
             if (PrinterComboBox.SelectedItem == null)
             {
                 MessageBox.Show("Please select a printer.", "Input Error", MessageBoxButton.OK, MessageBoxImage.Error);
