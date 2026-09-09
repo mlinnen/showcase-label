@@ -11,14 +11,14 @@ public class LabelGenerationTests
     [InlineData(
         0,
         "SIZE 101.6 mm,152.4 mm",
-        "QRCODE 493,493,M,8,A,0,M2,S7,\"https://charlottewoodcarvers.com/r?event=2027T&carver_id=123&entry=4\"",
-        "TEXT 1218,585,\"3\",0,1,2,\"C123-4\"")]
+        "QRCODE 575,493,M,8,A,0,M2,S7,\"https://charlottewoodcarvers.com/r?event=2027T&carver_id=123&entry=4\"",
+        "TEXT 5,585,\"3\",0,2,2,\"C123-4\"")]
     [InlineData(
         1,
         "SIZE 66.7 mm,25.4 mm",
-        "QRCODE 58,58,M,3,A,0,M2,S7,\"https://charlottewoodcarvers.com/r?event=2027T&carver_id=123&entry=4\"",
-        "TEXT 203,77,\"3\",0,2,2,\"C123-4\"")]
-    public void BuildTsplLabel_PreservesQrAndSelectedLabelSize(
+        "QRCODE 440,58,M,3,A,0,M2,S7,\"https://charlottewoodcarvers.com/r?event=2027T&carver_id=123&entry=4\"",
+        "TEXT 5,77,\"3\",0,2,2,\"C123-4\"")]
+    public void BuildTsplLabel_PlacesTextBeforeQrAndPreservesSelectedLabelSize(
         int labelSizeIndex,
         string expectedSize,
         string expectedQrCode,
@@ -44,6 +44,9 @@ public class LabelGenerationTests
         Assert.Contains("GAP 3 mm,0", tspl);
         Assert.Contains(expectedQrCode, tspl);
         Assert.Contains(expectedText, tspl);
+        Assert.True(
+            tspl.IndexOf(expectedText, StringComparison.Ordinal) <
+            tspl.IndexOf(expectedQrCode, StringComparison.Ordinal));
         Assert.Contains("PRINT 1,1", tspl);
     }
 
