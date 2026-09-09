@@ -75,7 +75,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    
+
+    - name: Read release version
+      id: version
+      shell: pwsh
+      run: |
+        [xml]$project = Get-Content "src/ShowcaseLabel/ShowcaseLabel.csproj"
+        $version = $project.Project.PropertyGroup.Version | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -First 1
+        if ([string]::IsNullOrWhiteSpace($version)) {
+          throw "No application version was found in src/ShowcaseLabel/ShowcaseLabel.csproj."
+        }
+        "tag=v$version" >> $env:GITHUB_OUTPUT
+
     - name: Download all artifacts
       uses: actions/download-artifact@v4
       with:
@@ -86,8 +97,8 @@ jobs:
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: v1.0.${{ github.run_number }}
-        name: Release v1.0.${{ github.run_number }}
+        tag_name: ${{ steps.version.outputs.tag }}
+        name: Release ${{ steps.version.outputs.tag }}
         files: artifacts/*.zip
         draft: false
         prerelease: false

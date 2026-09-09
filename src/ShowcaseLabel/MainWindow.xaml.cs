@@ -343,26 +343,27 @@ namespace ShowcaseLabel
             }
         }
 
-        // Builds TSPL commands for a label with the QR code and label ID text side by side.
-        // The QR code is on the left; the label ID text is vertically centered to its right.
+        // Builds TSPL commands for a label with the label ID text and QR code side by side.
+        // The label ID text is on the left; the QR code is vertically centered to its right.
         private byte[] BuildTsplLabel(string carver_id, int entryNumber, LabelSize size)
         {
             string qrData = $"{_baseUrl}?event={Uri.EscapeDataString(EventComboBox.SelectedItem?.ToString() ?? "")}&carver_id={Uri.EscapeDataString(carver_id)}&entry={entryNumber}";
 
             // Estimated QR code size in dots (modules × cellWidth; typical QR v3 = 29 modules)
             int qrSize   = 29 * size.QrCellWidth;
-            int margin   = Math.Max(5, (size.Height - qrSize) / 2);
-            int qrX      = margin;
-            int qrY      = margin;
+            int verticalMargin = Math.Max(5, (size.Height - qrSize) / 2);
+            int horizontalMargin = 5;
+            int qrX = size.Width - qrSize - horizontalMargin;
+            int qrY = verticalMargin;
 
-            // Place text to the right of the QR code, vertically centered
+            // Place text to the left of the QR code, vertically centered.
             // TSPL font "3": 16×24 dots/char at 1×1; scale up as space allows
-            int textAreaWidth = size.Width - qrSize - margin * 3;
+            int textAreaWidth = qrX - horizontalMargin;
             int xMul = textAreaWidth > 200 ? 2 : 1;
             int yMul = size.Height > 100   ? 2 : 1;
             int charW = 16 * xMul;
             int charH = 24 * yMul;
-            int textX = qrX + qrSize + margin;
+            int textX = horizontalMargin;
             int textY = Math.Max(0, (size.Height - charH) / 2);
 
             var sb = new StringBuilder();
@@ -372,8 +373,8 @@ namespace ShowcaseLabel
             sb.AppendLine($"GAP {size.GapMm} mm,0");
             sb.AppendLine("DIRECTION 0");
             sb.AppendLine("CLS");
-            sb.AppendLine($"QRCODE {qrX},{qrY},M,{size.QrCellWidth},A,0,M2,S7,\"{qrData}\"");
             sb.AppendLine($"TEXT {textX},{textY},\"3\",0,{xMul},{yMul},\"C{carver_id}-{entryNumber}\"");
+            sb.AppendLine($"QRCODE {qrX},{qrY},M,{size.QrCellWidth},A,0,M2,S7,\"{qrData}\"");
             sb.AppendLine("PRINT 1,1");
 
             return Encoding.ASCII.GetBytes(sb.ToString());
