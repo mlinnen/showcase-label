@@ -142,6 +142,15 @@ namespace ShowcaseLabel
             }
         }
 
+        private void AboutButton_Click(object sender, RoutedEventArgs e)
+        {
+            var aboutWindow = new AboutWindow
+            {
+                Owner = this,
+            };
+            aboutWindow.ShowDialog();
+        }
+
         // Validates the From/To entry range before any printer I/O is attempted.
         // Both bounds must be positive integers; bounds are inclusive, and a reversed
         // range (from > to) is rejected rather than auto-swapped.
