@@ -36,6 +36,8 @@ namespace ShowcaseLabel
         private static readonly IntPtr INVALID_HANDLE_VALUE = new(-1);
 
         private const int DPI = 203;
+        private const double TextLeftInsetInches = 0.5;
+        private const double TextToQrSpacingInches = 0.25;
 
         // Supported label sizes.
         // WidthMm/HeightMm/GapMm are physical dimensions used in TSPL SIZE/GAP commands
@@ -359,21 +361,23 @@ namespace ShowcaseLabel
             string qrData = $"{_baseUrl}?event={Uri.EscapeDataString(EventComboBox.SelectedItem?.ToString() ?? "")}&carver_id={Uri.EscapeDataString(carver_id)}&entry={entryNumber}";
 
             // Estimated QR code size in dots (modules × cellWidth; typical QR v3 = 29 modules)
-            int qrSize   = 29 * size.QrCellWidth;
+            int qrSize = 29 * size.QrCellWidth;
             int verticalMargin = Math.Max(5, (size.Height - qrSize) / 2);
-            int horizontalMargin = 5;
-            int qrX = size.Width - qrSize - horizontalMargin;
             int qrY = verticalMargin;
 
-            // Place text to the left of the QR code, vertically centered.
+            // Position text and QR code from their intended physical spacing, rather
+            // than aligning the QR code to the label's right edge.
             // TSPL font "3": 16×24 dots/char at 1×1; scale up as space allows
-            int textAreaWidth = qrX - horizontalMargin;
-            int xMul = textAreaWidth > 200 ? 2 : 1;
+            int textX = (int)Math.Round(DPI * TextLeftInsetInches);
+            int qrSpacing = (int)Math.Round(DPI * TextToQrSpacingInches);
+            int availableTextWidth = size.Width - textX - qrSpacing - qrSize;
+            int xMul = availableTextWidth > 200 ? 2 : 1;
             int yMul = size.Height > 100   ? 2 : 1;
             int charW = 16 * xMul;
             int charH = 24 * yMul;
-            int textX = horizontalMargin;
             int textY = Math.Max(0, (size.Height - charH) / 2);
+            string labelText = $"C{carver_id}-{entryNumber}";
+            int qrX = textX + (labelText.Length * charW) + qrSpacing;
 
             var sb = new StringBuilder();
             // Use physical mm dimensions so the gap sensor re-homes between labels,
@@ -382,7 +386,7 @@ namespace ShowcaseLabel
             sb.AppendLine($"GAP {size.GapMm} mm,0");
             sb.AppendLine("DIRECTION 0");
             sb.AppendLine("CLS");
-            sb.AppendLine($"TEXT {textX},{textY},\"3\",0,{xMul},{yMul},\"C{carver_id}-{entryNumber}\"");
+            sb.AppendLine($"TEXT {textX},{textY},\"3\",0,{xMul},{yMul},\"{labelText}\"");
             sb.AppendLine($"QRCODE {qrX},{qrY},M,{size.QrCellWidth},A,0,M2,S7,\"{qrData}\"");
             sb.AppendLine("PRINT 1,1");
 

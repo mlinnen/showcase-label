@@ -7,18 +7,20 @@ namespace ShowcaseLabel.Tests;
 
 public class LabelGenerationTests
 {
+    // At 203 DPI: 0.5 inch rounds to 102 dots; C123-4 is 6 × (16 × 2) = 192 dots;
+    // 0.25 inch rounds to 51 dots, so the QR code begins at 102 + 192 + 51 = 345.
     [Theory]
     [InlineData(
         0,
         "SIZE 101.6 mm,152.4 mm",
-        "QRCODE 575,493,M,8,A,0,M2,S7,\"https://charlottewoodcarvers.com/r?event=2027T&carver_id=123&entry=4\"",
-        "TEXT 5,585,\"3\",0,2,2,\"C123-4\"")]
+        "QRCODE 345,493,M,8,A,0,M2,S7,\"https://charlottewoodcarvers.com/r?event=2027T&carver_id=123&entry=4\"",
+        "TEXT 102,585,\"3\",0,2,2,\"C123-4\"")]
     [InlineData(
         1,
         "SIZE 66.7 mm,25.4 mm",
-        "QRCODE 440,58,M,3,A,0,M2,S7,\"https://charlottewoodcarvers.com/r?event=2027T&carver_id=123&entry=4\"",
-        "TEXT 5,77,\"3\",0,2,2,\"C123-4\"")]
-    public void BuildTsplLabel_PlacesTextBeforeQrAndPreservesSelectedLabelSize(
+        "QRCODE 345,58,M,3,A,0,M2,S7,\"https://charlottewoodcarvers.com/r?event=2027T&carver_id=123&entry=4\"",
+        "TEXT 102,77,\"3\",0,2,2,\"C123-4\"")]
+    public void BuildTsplLabel_PlacesTextHalfInchFromLeftAndQrQuarterInchAfterText(
         int labelSizeIndex,
         string expectedSize,
         string expectedQrCode,
